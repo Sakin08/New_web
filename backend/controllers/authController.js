@@ -125,21 +125,34 @@ export const updateProfile = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
   try {
+    console.log("Upload profile picture request received");
+    console.log("File:", req.file);
+    console.log("User:", req.user?._id);
+
     if (!req.file) {
+      console.log("No file in request");
       return res.status(400).json({ message: "No image provided" });
     }
 
+    console.log("Uploading to Cloudinary...");
     const imageUrl = await uploadImage(req.file);
+    console.log("Image uploaded:", imageUrl);
 
     const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     user.profilePicture = imageUrl;
     await user.save();
+    console.log("User updated successfully");
 
     const userResponse = user.toObject();
     delete userResponse.password;
     res.json(userResponse);
   } catch (error) {
     console.error("Profile picture upload error:", error);
+    console.error("Error stack:", error.stack);
     res.status(500).json({ message: error.message });
   }
 };
