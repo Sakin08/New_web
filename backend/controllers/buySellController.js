@@ -1,0 +1,82 @@
+import BuySellPost from "../models/BuySellPost.js";
+import { uploadImage } from "../services/cloudinaryService.js";
+import multer from "multer";
+
+const upload = multer({ dest: "uploads/" });
+
+export const createPost = [
+  upload.array("images", 5), // Allow up to 5 images
+  async (req, res) => {
+    try {
+      const { title, description, price, location } = req.body;
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: "At least one image required" });
+      }
+
+      // Upload all images to Cloudinary
+      const imageUrls = await Promise.all(
+        req.files.map((file) => uploadImage(file))
+      );
+
+      const post = await BuySellPost.create({
+        title,
+        description,
+        price,
+        location,
+        images: imageUrls,
+        image: imageUrls[0], // First image as main
+        user: req.user._id,
+      });
+
+      res.status(201).json(post);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+];
+
+export const getPosts = async (req, res) => {
+  const posts = await BuySellPost.find().populate("user", "name email");
+  res.json(posts);
+};
+
+export const getPost = async (req, res) => {
+  try {
+    const post = await BuySellPost.findById(req.params.id).populate(
+      "user",
+      "name email profilePicture"
+    );
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    // Increment view count
+    post.views = (post.views || 0) + 1;
+    await post.save();
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  const post = await BuySellPost.findById(req.params.id);
+  if (!post) return res.status(404).json({ message: "Post not found" });
+  if (post.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Not authorized" });
+  }
+
+  Object.assign(post, req.body);
+  await post.save();
+  res.json(post);
+};
+
+export const deletePost = async (req, res) => {
+  const post = await BuySellPost.findById(req.params.id);
+  if (!post) return res.status(404).json({ message: "Post not found" });
+  if (post.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Not authorized" });
+  }
+
+  await post.deleteOne();
+  res.json({ message: "Post deleted" });
+};
