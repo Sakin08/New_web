@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/axios.js';
+import ActivityFeed from '../components/ActivityFeed.jsx';
+import TrendingSection from '../components/TrendingSection.jsx';
 
 const Home = () => {
     const { user } = useAuth();
@@ -67,34 +69,66 @@ const Home = () => {
 
             {/* Features Section */}
             <div className="container mx-auto px-4 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                    <Link to="/buysell" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-3xl">🛍️</span>
+                {/* Trending and Activity */}
+                {user && (
+                    <div className="mb-16">
+                        <TrendingSection />
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                            <div className="lg:col-span-2">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Quick Access</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <Link to="/buysell" className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                                        <div className="text-3xl mb-2">🛍️</div>
+                                        <h3 className="font-bold text-gray-900">Buy & Sell</h3>
+                                        <p className="text-sm text-gray-600 mt-1">{stats.posts} listings</p>
+                                    </Link>
+                                    <Link to="/housing" className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                                        <div className="text-3xl mb-2">🏠</div>
+                                        <h3 className="font-bold text-gray-900">Housing</h3>
+                                        <p className="text-sm text-gray-600 mt-1">{stats.housing} available</p>
+                                    </Link>
+                                    <Link to="/events" className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                                        <div className="text-3xl mb-2">📅</div>
+                                        <h3 className="font-bold text-gray-900">Events</h3>
+                                        <p className="text-sm text-gray-600 mt-1">{stats.events} upcoming</p>
+                                    </Link>
+                                </div>
+                            </div>
+                            <ActivityFeed />
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Buy & Sell</h3>
-                        <p className="text-gray-600 mb-4">Find great deals on books, electronics, and more</p>
-                        <div className="text-blue-600 font-semibold">{stats.posts} active listings</div>
-                    </Link>
+                    </div>
+                )}
 
-                    <Link to="/housing" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-3xl">🏠</span>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Housing</h3>
-                        <p className="text-gray-600 mb-4">Find roommates and affordable accommodation</p>
-                        <div className="text-green-600 font-semibold">{stats.housing} available</div>
-                    </Link>
+                {!user && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                        <Link to="/buysell" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                                <span className="text-3xl">🛍️</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Buy & Sell</h3>
+                            <p className="text-gray-600 mb-4">Find great deals on books, electronics, and more</p>
+                            <div className="text-blue-600 font-semibold">{stats.posts} active listings</div>
+                        </Link>
 
-                    <Link to="/events" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
-                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-3xl">📅</span>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Events</h3>
-                        <p className="text-gray-600 mb-4">Stay updated with campus activities</p>
-                        <div className="text-purple-600 font-semibold">{stats.events} upcoming</div>
-                    </Link>
-                </div>
+                        <Link to="/housing" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                <span className="text-3xl">🏠</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Housing</h3>
+                            <p className="text-gray-600 mb-4">Find roommates and affordable accommodation</p>
+                            <div className="text-green-600 font-semibold">{stats.housing} available</div>
+                        </Link>
+
+                        <Link to="/events" className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition transform hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                                <span className="text-3xl">📅</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Events</h3>
+                            <p className="text-gray-600 mb-4">Stay updated with campus activities</p>
+                            <div className="text-purple-600 font-semibold">{stats.events} upcoming</div>
+                        </Link>
+                    </div>
+                )}  {/* ✅ FIXED: closed the conditional block properly */}
 
                 {/* Recent Posts */}
                 {recentPosts.length > 0 && (

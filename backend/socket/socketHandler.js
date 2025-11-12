@@ -18,6 +18,18 @@ export const initializeSocket = (io) => {
       io.emit("userStatusChange", { userId, online: true });
     });
 
+    // Join events room for real-time updates
+    socket.on("joinEvents", () => {
+      socket.join("events");
+      console.log(`Socket ${socket.id} joined events room`);
+    });
+
+    // Leave events room
+    socket.on("leaveEvents", () => {
+      socket.leave("events");
+      console.log(`Socket ${socket.id} left events room`);
+    });
+
     // Join a specific chat room
     socket.on("joinRoom", (chatId) => {
       socket.join(chatId);
@@ -89,3 +101,8 @@ export const initializeSocket = (io) => {
 };
 
 export const getOnlineUsers = () => Array.from(onlineUsers.keys());
+
+// Helper function to emit event updates
+export const emitEventUpdate = (io, eventType, eventData) => {
+  io.to("events").emit("eventUpdate", { type: eventType, data: eventData });
+};

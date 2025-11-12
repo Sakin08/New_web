@@ -9,6 +9,7 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [eventUpdates, setEventUpdates] = useState(null);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -28,6 +29,12 @@ export const SocketProvider = ({ children }) => {
                 );
             });
 
+            // Listen for event updates
+            newSocket.on('eventUpdate', (update) => {
+                console.log('Event update received:', update);
+                setEventUpdates(update);
+            });
+
             setSocket(newSocket);
 
             return () => newSocket.close();
@@ -40,7 +47,7 @@ export const SocketProvider = ({ children }) => {
     }, [user]);
 
     return (
-        <SocketContext.Provider value={{ socket, onlineUsers }}>
+        <SocketContext.Provider value={{ socket, onlineUsers, eventUpdates }}>
             {children}
         </SocketContext.Provider>
     );

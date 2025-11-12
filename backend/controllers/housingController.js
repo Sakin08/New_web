@@ -39,6 +39,27 @@ export const getHousings = async (req, res) => {
   res.json(posts);
 };
 
+export const getHousingById = async (req, res) => {
+  try {
+    const post = await HousingPost.findById(req.params.id).populate(
+      "user",
+      "name email phone profilePicture"
+    );
+
+    if (!post) {
+      return res.status(404).json({ message: "Housing post not found" });
+    }
+
+    // Increment view count
+    post.views = (post.views || 0) + 1;
+    await post.save();
+
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateHousing = async (req, res) => {
   const post = await HousingPost.findById(req.params.id);
   if (!post) return res.status(404).json({ message: "Not found" });

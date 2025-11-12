@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import UnreadBadge from './UnreadBadge.jsx';
+import NotificationCenter from './NotificationCenter.jsx';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -24,13 +25,25 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/buysell" className="text-white hover:text-blue-100 transition font-medium">
-              Buy & Sell
+              🛍️ Buy & Sell
             </Link>
             <Link to="/housing" className="text-white hover:text-blue-100 transition font-medium">
-              Housing
+              🏠 Housing
             </Link>
             <Link to="/events" className="text-white hover:text-blue-100 transition font-medium">
-              Events
+              📅 Events
+            </Link>
+            <Link to="/study-groups" className="text-white hover:text-blue-100 transition font-medium">
+              📚 Study
+            </Link>
+            <Link to="/jobs" className="text-white hover:text-blue-100 transition font-medium">
+              💼 Jobs
+            </Link>
+            <Link to="/food" className="text-white hover:text-blue-100 transition font-medium">
+              🍕 Food
+            </Link>
+            <Link to="/lost-found" className="text-white hover:text-blue-100 transition font-medium">
+              🔍 Lost & Found
             </Link>
 
             {user ? (
@@ -42,6 +55,7 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-white hover:text-blue-100 transition font-medium">
                   Dashboard
                 </Link>
+                <NotificationCenter />
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-600 font-bold">
                     {user.name?.charAt(0).toUpperCase()}

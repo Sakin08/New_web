@@ -9,6 +9,16 @@ import housingRoutes from "./routes/housingRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import rsvpRoutes from "./routes/rsvpRoutes.js";
+import reminderRoutes from "./routes/reminderRoutes.js";
+import studyGroupRoutes from "./routes/studyGroupRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import foodRoutes from "./routes/foodRoutes.js";
+import lostFoundRoutes from "./routes/lostFoundRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 const app = express();
 
@@ -50,6 +60,16 @@ app.use("/api/housing", housingRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/favorites", favoriteRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/rsvp", rsvpRoutes);
+app.use("/api/reminders", reminderRoutes);
+app.use("/api/study-groups", studyGroupRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/food", foodRoutes);
+app.use("/api/lost-found", lostFoundRoutes);
+app.use("/api/comments", commentRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
