@@ -19,6 +19,7 @@ const jobSchema = new mongoose.Schema(
     contactPhone: { type: String },
     applicationLink: { type: String },
     skills: [{ type: String }],
+    images: [{ type: String }],
     poster: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

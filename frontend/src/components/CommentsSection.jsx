@@ -126,7 +126,7 @@ const CommentsSection = ({ postType, postId }) => {
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-semibold text-gray-900">{comment.author.name}</span>
+                                    <span className="font-semibold text-gray-900">{comment.author?.name || 'Unknown User'}</span>
                                     <span className="text-xs text-gray-500">
                                         {new Date(comment.createdAt).toLocaleDateString()}
                                     </span>
@@ -145,7 +145,7 @@ const CommentsSection = ({ postType, postId }) => {
                                         {comment.likes?.length || 0}
                                     </button>
 
-                                    {user && comment.author._id === user._id && (
+                                    {user && comment.author?._id === user._id && (
                                         <button
                                             onClick={() => handleDelete(comment._id)}
                                             className="text-sm text-red-600 hover:text-red-700 transition"

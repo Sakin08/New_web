@@ -1,4 +1,8 @@
 import Message from "../models/Message.js";
+import { uploadImage } from "../services/cloudinaryService.js";
+import multer from "multer";
+
+const upload = multer({ dest: "uploads/" });
 
 // Generate deterministic chatId
 export const generateChatId = (userId1, userId2) => {
@@ -47,6 +51,11 @@ export const getRecentChats = async (req, res) => {
     const chatMap = new Map();
 
     for (const msg of messages) {
+      // Skip messages with deleted users
+      if (!msg.senderId || !msg.receiverId) {
+        continue;
+      }
+
       if (!chatMap.has(msg.chatId)) {
         const otherUser =
           msg.senderId._id.toString() === currentUserId
@@ -87,5 +96,93 @@ export const getUnreadCount = async (req, res) => {
     res.json({ count });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Upload file/image for chat
+export const uploadChatFile = [
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const fileUrl = await uploadImage(req.file);
+
+      res.json({
+        url: fileUrl,
+        filename: req.file.originalname,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+      });
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  },
+];
+
+// Delete message for me only
+export const deleteMessageForMe = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const currentUserId = req.user._id;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Add current user to deletedFor array
+    if (!message.deletedFor.includes(currentUserId)) {
+      message.deletedFor.push(currentUserId);
+      await message.save();
+    }
+
+    res.json({ message: "Message deleted for you", messageId });
+  } catch (error) {
+    console.error("Delete message error:", error);
+    res.status(500).json({ message: "Failed to delete message" });
+  }
+};
+
+// Delete message for everyone
+export const deleteMessageForEveryone = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const currentUserId = req.user._id.toString();
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Only sender can delete for everyone
+    if (message.senderId.toString() !== currentUserId) {
+      return res.status(403).json({
+        message: "You can only delete your own messages for everyone",
+      });
+    }
+
+    // Check if message is within 1 hour (optional time limit)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (message.createdAt < oneHourAgo) {
+      return res.status(403).json({
+        message: "Messages can only be deleted for everyone within 1 hour",
+      });
+    }
+
+    message.deletedForEveryone = true;
+    message.message = "This message was deleted";
+    message.attachments = [];
+    await message.save();
+
+    res.json({ message: "Message deleted for everyone", messageId });
+  } catch (error) {
+    console.error("Delete message error:", error);
+    res.status(500).json({ message: "Failed to delete message" });
   }
 };

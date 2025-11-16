@@ -24,13 +24,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Don't log 401 errors for profile endpoint (user not logged in is expected)
-    if (
-      !(
-        error.response?.status === 401 &&
-        error.config?.url?.includes("/auth/profile")
-      )
-    ) {
+    // Handle banned users - auto logout and redirect
+    if (error.response?.status === 403 && error.response?.data?.banned) {
+      localStorage.removeItem("hasAuth");
+      alert(error.response.data.message || "Your account has been banned.");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    // Don't log expected errors
+    const shouldSkipLog =
+      (error.response?.status === 401 &&
+        error.config?.url?.includes("/auth/profile")) ||
+      (error.response?.status === 404 &&
+        error.config?.url?.includes("/blood-donation/donors/"));
+
+    if (!shouldSkipLog) {
       console.error("API Error:", error.response?.status, error.response?.data);
     }
     return Promise.reject(error);

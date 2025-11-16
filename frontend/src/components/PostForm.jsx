@@ -19,6 +19,8 @@ const PostForm = ({ type, onSubmit, initialData = {} }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setImages(files);
@@ -109,15 +111,17 @@ const PostForm = ({ type, onSubmit, initialData = {} }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="SUST Campus"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="SUST Campus"
+                />
+              </div>
             </div>
           </div>
 

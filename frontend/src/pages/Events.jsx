@@ -258,7 +258,13 @@ const Events = () => {
                   key={event._id}
                   event={event}
                   onUpdate={(updatedEvent) => {
-                    setEvents(events.map(e => e._id === updatedEvent._id ? updatedEvent : e));
+                    if (updatedEvent) {
+                      // Update existing event
+                      setEvents(events.map(e => e._id === updatedEvent._id ? updatedEvent : e));
+                    } else {
+                      // Reload all events (for delete)
+                      loadEvents();
+                    }
                   }}
                 />
               ))}

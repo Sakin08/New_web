@@ -13,8 +13,28 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    message: { type: String, required: true },
+    message: { type: String },
+    messageType: {
+      type: String,
+      enum: ["text", "image", "file", "document"],
+      default: "text",
+    },
+    attachments: [
+      {
+        url: { type: String, required: true },
+        filename: { type: String },
+        fileType: { type: String },
+        fileSize: { type: Number },
+      },
+    ],
     read: { type: Boolean, default: false },
+    deletedForEveryone: { type: Boolean, default: false },
+    deletedFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

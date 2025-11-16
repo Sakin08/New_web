@@ -16,9 +16,19 @@ import rsvpRoutes from "./routes/rsvpRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 import studyGroupRoutes from "./routes/studyGroupRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
-import foodRoutes from "./routes/foodRoutes.js";
+import foodMenuRoutes from "./routes/foodMenuRoutes.js";
+import restaurantRoutes from "./routes/restaurantRoutes.js";
+import menuItemRoutes from "./routes/menuItemRoutes.js";
+import foodOrderRoutes from "./routes/foodOrderRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import lostFoundRoutes from "./routes/lostFoundRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
+import bloodDonorRoutes from "./routes/bloodDonorRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
+import savedPostRoutes from "./routes/savedPostRoutes.js";
+import quickMenuRoutes from "./routes/quickMenuRoutes.js";
+import holidayRoutes from "./routes/holidayRoutes.js";
+import busScheduleRoutes from "./routes/busScheduleRoutes.js";
 
 const app = express();
 
@@ -67,9 +77,19 @@ app.use("/api/rsvp", rsvpRoutes);
 app.use("/api/reminders", reminderRoutes);
 app.use("/api/study-groups", studyGroupRoutes);
 app.use("/api/jobs", jobRoutes);
-app.use("/api/food", foodRoutes);
+app.use("/api/food-menu", foodMenuRoutes);
+app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/menu-items", menuItemRoutes);
+app.use("/api/food-orders", foodOrderRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/lost-found", lostFoundRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/blood-donation", bloodDonorRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/saved-posts", savedPostRoutes);
+app.use("/api/quick-menu", quickMenuRoutes);
+app.use("/api/holidays", holidayRoutes);
+app.use("/api/bus-schedule", busScheduleRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

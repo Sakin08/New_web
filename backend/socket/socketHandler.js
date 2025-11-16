@@ -1,4 +1,5 @@
 import Message from "../models/Message.js";
+import User from "../models/User.js";
 import { generateChatId } from "../controllers/chatController.js";
 
 // Store online users: { userId: socketId }
@@ -9,13 +10,23 @@ export const initializeSocket = (io) => {
     console.log("User connected:", socket.id);
 
     // User joins with their userId
-    socket.on("userOnline", (userId) => {
+    socket.on("userOnline", async (userId) => {
       onlineUsers.set(userId, socket.id);
       socket.userId = userId;
       console.log(`User ${userId} is online`);
 
+      // Update lastActive
+      try {
+        await User.findByIdAndUpdate(userId, { lastActive: new Date() });
+      } catch (error) {
+        console.error("Error updating lastActive:", error);
+      }
+
       // Broadcast online status
       io.emit("userStatusChange", { userId, online: true });
+      io.emit("userOnline", userId);
+      // Send list of all online users
+      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
     });
 
     // Join events room for real-time updates
@@ -39,14 +50,23 @@ export const initializeSocket = (io) => {
     // Send message
     socket.on(
       "sendMessage",
-      async ({ chatId, senderId, receiverId, message }) => {
+      async ({
+        chatId,
+        senderId,
+        receiverId,
+        message,
+        messageType,
+        attachments,
+      }) => {
         try {
           // Save message to database
           const newMessage = await Message.create({
             chatId,
             senderId,
             receiverId,
-            message,
+            message: message || "",
+            messageType: messageType || "text",
+            attachments: attachments || [],
           });
 
           // Populate sender info
@@ -89,11 +109,27 @@ export const initializeSocket = (io) => {
       }
     });
 
+    // Delete message
+    socket.on("deleteMessage", ({ chatId, messageId, deleteType }) => {
+      io.to(chatId).emit("messageDeleted", { messageId, deleteType });
+    });
+
     // Disconnect
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       if (socket.userId) {
         onlineUsers.delete(socket.userId);
+
+        // Update lastActive on disconnect
+        try {
+          await User.findByIdAndUpdate(socket.userId, {
+            lastActive: new Date(),
+          });
+        } catch (error) {
+          console.error("Error updating lastActive on disconnect:", error);
+        }
+
         io.emit("userStatusChange", { userId: socket.userId, online: false });
+        io.emit("userOffline", socket.userId);
         console.log(`User ${socket.userId} disconnected`);
       }
     });

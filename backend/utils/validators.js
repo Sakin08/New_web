@@ -1,6 +1,6 @@
 export const validateEmail = (email) => {
-  // Only allow @student.sust.edu emails
-  return /^[^\s@]+@student\.sust\.edu$/.test(email);
+  // Allow any valid email format
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
 export const validatePassword = (password) => {

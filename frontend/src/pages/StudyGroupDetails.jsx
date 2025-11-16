@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from '../components/UserAvatar';
 import CommentsSection from '../components/CommentsSection';
+import PosterInfo from '../components/PosterInfo';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -155,8 +156,8 @@ const StudyGroupDetails = () => {
                                             onClick={handleJoin}
                                             disabled={isFull}
                                             className={`px-6 py-2 rounded-lg font-semibold transition ${isFull
-                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
                                                 }`}
                                         >
                                             {isFull ? 'Group Full' : 'Join Group'}
@@ -242,19 +243,7 @@ const StudyGroupDetails = () => {
                         </div>
 
                         {/* Creator Info */}
-                        <div className="border-t border-gray-200 pt-6 mb-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-3">Created By</h2>
-                            <Link
-                                to={`/profile/${group.creator._id}`}
-                                className="flex items-center gap-3 hover:bg-gray-50 p-3 rounded-lg transition inline-flex"
-                            >
-                                <UserAvatar user={group.creator} size="md" />
-                                <div>
-                                    <p className="font-semibold text-gray-900">{group.creator.name}</p>
-                                    <p className="text-sm text-gray-600">{group.creator.email}</p>
-                                </div>
-                            </Link>
-                        </div>
+                        <PosterInfo user={group.creator} createdAt={group.createdAt} />
                     </div>
                 </div>
 

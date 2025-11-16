@@ -20,18 +20,64 @@ const CreateJob = () => {
         applicationLink: '',
         skills: ''
     });
+    const [images, setImages] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length + images.length > 5) {
+            alert('Maximum 5 images allowed');
+            return;
+        }
+
+        setImages([...images, ...files]);
+
+        // Create previews
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreviews(prev => [...prev, reader.result]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index) => {
+        setImages(images.filter((_, i) => i !== index));
+        setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            await axios.post(`${API_URL}/jobs`, {
-                ...formData,
-                skills: formData.skills ? JSON.stringify(formData.skills.split(',').map(s => s.trim())) : '[]'
-            }, { withCredentials: true });
+            const formDataToSend = new FormData();
+            formDataToSend.append('title', formData.title);
+            formDataToSend.append('company', formData.company);
+            formDataToSend.append('description', formData.description);
+            formDataToSend.append('type', formData.type);
+            formDataToSend.append('location', formData.location);
+            formDataToSend.append('salary', formData.salary);
+            formDataToSend.append('duration', formData.duration);
+            formDataToSend.append('requirements', formData.requirements);
+            formDataToSend.append('applicationDeadline', formData.applicationDeadline);
+            formDataToSend.append('contactEmail', formData.contactEmail);
+            formDataToSend.append('contactPhone', formData.contactPhone);
+            formDataToSend.append('applicationLink', formData.applicationLink);
+            formDataToSend.append('skills', JSON.stringify(formData.skills ? formData.skills.split(',').map(s => s.trim()) : []));
+
+            // Append images
+            images.forEach(image => {
+                formDataToSend.append('images', image);
+            });
+
+            await axios.post(`${API_URL}/jobs`, formDataToSend, {
+                withCredentials: true,
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
 
             navigate('/jobs');
         } catch (err) {
@@ -174,6 +220,60 @@ const CreateJob = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                                 placeholder="e.g., React, Node.js, MongoDB"
                             />
+                        </div>
+
+                        {/* Image Upload Section */}
+                        <div className="border-t border-gray-200 pt-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Images (Optional)</h3>
+                            <p className="text-sm text-gray-600 mb-4">Add company logo or job-related images (max 5)</p>
+
+                            <div className="space-y-4">
+                                {/* Image Previews */}
+                                {imagePreviews.length > 0 && (
+                                    <div className="grid grid-cols-5 gap-4">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={index} className="relative group">
+                                                <img
+                                                    src={preview}
+                                                    alt={`Preview ${index + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Upload Button */}
+                                {images.length < 5 && (
+                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <p className="mb-2 text-sm text-gray-500">
+                                                <span className="font-semibold">Click to upload</span> or drag and drop
+                                            </p>
+                                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                )}
+                            </div>
                         </div>
 
                         <div className="border-t border-gray-200 pt-6">

@@ -43,7 +43,11 @@ export const createLostFound = [
         poster: req.user._id,
       });
 
-      await item.populate("poster", "name email profilePicture");
+      await item.populate(
+        "poster",
+        "name email profilePicture department batch isStudentVerified"
+      );
+
       res.status(201).json(item);
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -58,11 +62,14 @@ export const getLostFoundItems = async (req, res) => {
 
     if (type) filter.type = type;
     if (category) filter.category = category;
-    if (status) filter.status = status;
-    else filter.status = "active"; // Default to active items
+    if (status && status !== "all") filter.status = status;
+    else if (!status) filter.status = "active"; // Default to active items if no status specified
 
     const items = await LostFound.find(filter)
-      .populate("poster", "name email profilePicture")
+      .populate(
+        "poster",
+        "name email profilePicture department batch isStudentVerified"
+      )
       .sort({ createdAt: -1 });
 
     res.json(items);
@@ -74,7 +81,10 @@ export const getLostFoundItems = async (req, res) => {
 export const getLostFoundById = async (req, res) => {
   try {
     const item = await LostFound.findById(req.params.id)
-      .populate("poster", "name email profilePicture")
+      .populate(
+        "poster",
+        "name email profilePicture department batch isStudentVerified"
+      )
       .populate("claimedBy", "name email profilePicture");
 
     if (!item) {
@@ -107,7 +117,10 @@ export const claimItem = async (req, res) => {
     item.status = "claimed";
     item.claimedBy = req.user._id;
     await item.save();
-    await item.populate("poster", "name email profilePicture");
+    await item.populate(
+      "poster",
+      "name email profilePicture department batch isStudentVerified"
+    );
     await item.populate("claimedBy", "name email profilePicture");
 
     res.json(item);
@@ -146,7 +159,11 @@ export const deleteLostFound = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    if (item.poster.toString() !== req.user._id.toString()) {
+    // Allow admin or owner to delete
+    const isOwner = item.poster.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "Not authorized" });
     }
 

@@ -23,7 +23,14 @@ const Login = () => {
       await login(formData.email, formData.password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const errorData = err.response?.data;
+      if (errorData?.banned) {
+        setError('🚫 ' + (errorData?.message || 'Your account has been banned. Please contact support.'));
+      } else if (errorData?.pending) {
+        setError('⏳ Your account is pending admin approval. Please wait for verification.');
+      } else {
+        setError(errorData?.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -34,7 +41,7 @@ const Login = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600">Sign in to your Campus HUB account</p>
+          <p className="text-gray-600">Sign in to your SUST Connect account</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">

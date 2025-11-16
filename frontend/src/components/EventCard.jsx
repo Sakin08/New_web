@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import eventsApi from '../api/events.js';
 import { useAuth } from '../context/AuthContext';
-import UserAvatar from './UserAvatar';
+import { canDelete } from '../utils/permissions';
+import PosterInfo from './PosterInfo';
 import ReportModal from './ReportModal';
 import ShareButton from './ShareButton';
 import RSVPButton from './RSVPButton';
+import SaveButton from './SaveButton';
 
 const EventCard = ({ event, onUpdate }) => {
     const { user } = useAuth();
@@ -77,6 +79,24 @@ const EventCard = ({ event, onUpdate }) => {
         }
     };
 
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            await eventsApi.remove(event._id);
+            if (onUpdate) onUpdate();
+            alert('Event deleted successfully');
+        } catch (err) {
+            console.error('Error deleting event:', err);
+            alert('Failed to delete event');
+        }
+    };
+
+    const isOwner = user && event.user && user._id === event.user._id;
+    const showDelete = canDelete(user, event.user);
+
     return (
         <>
             <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
@@ -91,7 +111,17 @@ const EventCard = ({ event, onUpdate }) => {
                         <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
                             {status.text}
                         </div>
-                        {user && user._id !== event.user?._id && (
+                        {showDelete ? (
+                            <button
+                                onClick={handleDelete}
+                                className="absolute top-3 left-3 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition shadow-lg"
+                                title="Delete this event"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        ) : user && (
                             <button
                                 onClick={() => setShowReportModal(true)}
                                 className="absolute top-3 left-3 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full transition"
@@ -173,61 +203,68 @@ const EventCard = ({ event, onUpdate }) => {
                                     {interestedCount} {interestedCount === 1 ? 'person' : 'people'} interested
                                 </span>
                             </div>
-                            <ShareButton
-                                title={event.title}
-                                description={event.description}
-                                url={`${window.location.origin}/events`}
-                            />
+                            <div className="flex gap-2">
+                                <ShareButton
+                                    title={event.title}
+                                    description={event.description}
+                                    url={`${window.location.origin}/events`}
+                                />
+                                <SaveButton postId={event._id} postType="event" />
+                            </div>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                            <a
-                                href={`/profile/${event.user?._id}`}
-                                className="flex items-center space-x-3 hover:opacity-80 transition"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
-                            >
-                                <UserAvatar user={event.user} size="sm" />
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">{event.user?.name || 'Unknown'}</p>
-                                    <p className="text-xs text-gray-500">Posted {new Date(event.createdAt).toLocaleDateString()}</p>
-                                </div>
-                            </a>
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <PosterInfo user={event.user} createdAt={event.createdAt} />
 
-                            {user ? (
-                                <button
-                                    onClick={handleInterested}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${isInterested ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-purple-600 text-white hover:bg-purple-700'
-                                        }`}
-                                >
-                                    {isInterested ? (
-                                        <>
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                                            </svg>
-                                            Interested
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                            Mark Interested
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleInterested}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-gray-400 text-white hover:bg-gray-500 transition"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                    Login to Mark Interest
-                                </button>
-                            )}
+                            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                                {user ? (
+                                    <button
+                                        onClick={handleInterested}
+                                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${isInterested ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-purple-600 text-white hover:bg-purple-700'
+                                            }`}
+                                    >
+                                        {isInterested ? (
+                                            <>
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                                </svg>
+                                                Interested
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                                Mark Interested
+                                            </>
+                                        )}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleInterested}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-gray-400 text-white hover:bg-gray-500 transition"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        Login to Mark Interest
+                                    </button>
+                                )}
+
+                                {/* Delete Button */}
+                                {showDelete && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="sm:flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition whitespace-nowrap"
+                                        title="Delete event"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -7,6 +7,8 @@ import {
   updateProfile,
   changePassword,
   uploadProfilePicture,
+  sendOTP,
+  verifyOTPAndRegister,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/auth.js";
 import multer from "multer";
@@ -15,6 +17,11 @@ const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
+// New OTP-based registration
+router.post("/send-otp", sendOTP);
+router.post("/verify-otp", verifyOTPAndRegister);
+
+// Legacy routes
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);

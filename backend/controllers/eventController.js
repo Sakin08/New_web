@@ -61,21 +61,15 @@ export const createEvent = [
 
       const event = await Event.create(eventData);
 
-      await event.populate("user", "name email profilePicture");
+      await event.populate(
+        "user",
+        "name email profilePicture department batch isStudentVerified"
+      );
 
       // Emit real-time event creation
       const io = req.app.get("io");
       if (io) {
         io.to("events").emit("eventUpdate", { type: "created", data: event });
-
-        // Broadcast notification to all connected users
-        io.emit("newNotification", {
-          type: "event_created",
-          title: "New Event Posted",
-          message: `${req.user.name} posted: ${event.title}`,
-          link: `/events`,
-          data: { eventId: event._id },
-        });
       }
 
       res.status(201).json(event);
@@ -89,12 +83,35 @@ export const createEvent = [
 export const getEvents = async (req, res) => {
   try {
     const events = await Event.find()
-      .populate("user", "name email profilePicture")
+      .populate(
+        "user",
+        "name email profilePicture department batch isStudentVerified"
+      )
       .populate("interested", "name")
       .sort({ date: 1 });
     res.json(events);
   } catch (error) {
     console.error("Get events error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate(
+        "user",
+        "name email profilePicture department batch isStudentVerified"
+      )
+      .populate("interested", "name");
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.json(event);
+  } catch (error) {
+    console.error("Get event by ID error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -120,7 +137,10 @@ export const markInterested = async (req, res) => {
     }
 
     await event.save();
-    await event.populate("user", "name email profilePicture");
+    await event.populate(
+      "user",
+      "name email profilePicture department batch isStudentVerified"
+    );
     await event.populate("interested", "name");
 
     // Emit real-time interest update
@@ -139,6 +159,42 @@ export const markInterested = async (req, res) => {
     res.json(event);
   } catch (error) {
     console.error("Interest update error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Allow admin or owner to delete
+    const isOwner = event.user.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this event" });
+    }
+
+    await event.deleteOne();
+
+    // Emit real-time event deletion
+    const io = req.app.get("io");
+    if (io) {
+      io.to("events").emit("eventUpdate", {
+        type: "deleted",
+        data: { eventId: event._id },
+      });
+    }
+
+    res.json({ message: "Event deleted successfully" });
+  } catch (error) {
+    console.error("Delete event error:", error);
     res.status(500).json({ message: error.message });
   }
 };

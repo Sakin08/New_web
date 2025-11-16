@@ -30,7 +30,11 @@ export const createStudyGroup = async (req, res) => {
       members: [req.user._id], // Creator is automatically a member
     });
 
-    await studyGroup.populate("creator", "name email profilePicture");
+    await studyGroup.populate(
+      "creator",
+      "name email profilePicture department batch isStudentVerified"
+    );
+
     res.status(201).json(studyGroup);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -40,7 +44,10 @@ export const createStudyGroup = async (req, res) => {
 export const getStudyGroups = async (req, res) => {
   try {
     const groups = await StudyGroup.find({ isActive: true })
-      .populate("creator", "name email profilePicture")
+      .populate(
+        "creator",
+        "name email profilePicture department batch isStudentVerified"
+      )
       .populate("members", "name profilePicture")
       .sort({ createdAt: -1 });
     res.json(groups);
@@ -52,7 +59,10 @@ export const getStudyGroups = async (req, res) => {
 export const getStudyGroupById = async (req, res) => {
   try {
     const group = await StudyGroup.findById(req.params.id)
-      .populate("creator", "name email profilePicture")
+      .populate(
+        "creator",
+        "name email profilePicture department batch isStudentVerified"
+      )
       .populate("members", "name email profilePicture");
 
     if (!group) {
@@ -82,7 +92,10 @@ export const joinStudyGroup = async (req, res) => {
 
     group.members.push(req.user._id);
     await group.save();
-    await group.populate("creator", "name email profilePicture");
+    await group.populate(
+      "creator",
+      "name email profilePicture department batch isStudentVerified"
+    );
     await group.populate("members", "name profilePicture");
 
     res.json(group);
@@ -118,7 +131,11 @@ export const deleteStudyGroup = async (req, res) => {
       return res.status(404).json({ message: "Study group not found" });
     }
 
-    if (group.creator.toString() !== req.user._id.toString()) {
+    // Allow admin or owner to delete
+    const isOwner = group.creator.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ message: "Not authorized" });
     }
 

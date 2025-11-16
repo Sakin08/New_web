@@ -102,15 +102,39 @@ const NotificationCenter = () => {
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'event_created':
+            case 'event_posted':
                 return '📅';
             case 'event_interest':
                 return '❤️';
             case 'new_message':
                 return '💬';
             case 'item_posted':
+            case 'buysell_posted':
                 return '🛍️';
             case 'housing_posted':
                 return '🏠';
+            case 'job_posted':
+                return '💼';
+            case 'food_posted':
+                return '🍕';
+            case 'lostfound_posted':
+                return '🔍';
+            case 'studygroup_posted':
+                return '📚';
+            case 'comment_added':
+                return '💬';
+            case 'post_liked':
+            case 'like_added':
+                return '❤️';
+            case 'rsvp_added':
+            case 'interested_added':
+                return '✅';
+            case 'join_added':
+                return '👥';
+            case 'blood_posted':
+            case 'blood_request':
+            case 'blood_response':
+                return '🩸';
             default:
                 return '🔔';
         }
@@ -176,15 +200,29 @@ const NotificationCenter = () => {
                                 <p>No notifications yet</p>
                             </div>
                         ) : (
-                            notifications.map((notification) => (
+                            notifications.map((notification, index) => (
                                 <div
-                                    key={notification._id}
+                                    key={notification._id || `notification-${index}`}
                                     onClick={() => handleNotificationClick(notification)}
                                     className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition ${!notification.read ? 'bg-indigo-50' : ''
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                                        {/* User Profile Picture */}
+                                        {notification.sender?.profilePicture ? (
+                                            <img
+                                                src={notification.sender.profilePicture}
+                                                alt={notification.sender.name}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        ) : notification.sender ? (
+                                            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
+                                                {notification.sender.name?.charAt(0).toUpperCase()}
+                                            </div>
+                                        ) : (
+                                            <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                                        )}
+
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
                                             <p className="text-sm text-gray-600 mt-1">{notification.message}</p>

@@ -28,13 +28,53 @@ export const getUserProfile = async (req, res) => {
 // Update user profile
 export const updateProfile = async (req, res) => {
   try {
-    const { bio, interests, phone } = req.body;
+    const {
+      name,
+      bio,
+      interests,
+      phone,
+      department,
+      username,
+      gender,
+      dateOfBirth,
+      emergencyContact,
+      socialLinks,
+      address,
+      dormInfo,
+      coursesEnrolled,
+      coursesTaught,
+    } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { bio, interests, phone },
-      { new: true }
-    ).select("-password");
+    const updateData = {};
+
+    // Mandatory fields (can be updated)
+    if (name) updateData.name = name;
+    if (department) updateData.department = department;
+
+    // Optional fields
+    if (bio !== undefined) updateData.bio = bio;
+    if (interests !== undefined) updateData.interests = interests;
+    if (phone !== undefined) updateData.phone = phone;
+    if (username !== undefined) updateData.username = username;
+    if (gender !== undefined) updateData.gender = gender;
+    if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+    if (emergencyContact !== undefined)
+      updateData.emergencyContact = emergencyContact;
+    if (socialLinks !== undefined) updateData.socialLinks = socialLinks;
+    if (address !== undefined) updateData.address = address;
+    if (dormInfo !== undefined) updateData.dormInfo = dormInfo;
+    if (coursesEnrolled !== undefined)
+      updateData.coursesEnrolled = coursesEnrolled;
+    if (coursesTaught !== undefined) updateData.coursesTaught = coursesTaught;
+
+    const user = await User.findByIdAndUpdate(req.user._id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json(user);
   } catch (error) {
@@ -134,6 +174,23 @@ export const getUserReviews = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get following users with lastActive info
+export const getFollowingUsers = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate("following", "name profilePicture lastActive department")
+      .select("following");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user.following);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

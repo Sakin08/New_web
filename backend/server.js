@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { initializeSocket } from "./socket/socketHandler.js";
+import { startEventCleanup } from "./services/eventCleanupService.js";
 
 connectDB();
 
@@ -33,4 +34,8 @@ initializeSocket(io);
 // Make io accessible in routes
 app.set("io", io);
 
-httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  // Start event cleanup service
+  startEventCleanup();
+});
