@@ -13,6 +13,8 @@ const notificationsApi = {
   markAsRead: (id) => api.patch(`/${id}/read`),
   markAllAsRead: () => api.patch("/read-all"),
   delete: (id) => api.delete(`/${id}`),
+  deleteNotification: (id) => api.delete(`/${id}`),
+  deleteAll: () => api.delete("/delete-all"),
 };
 
 export default notificationsApi;

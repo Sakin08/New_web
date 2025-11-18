@@ -6,6 +6,7 @@ import MessageButton from '../components/MessageButton.jsx';
 import ImageGallery from '../components/ImageGallery.jsx';
 import FavoriteButton from '../components/FavoriteButton.jsx';
 import PosterInfo from '../components/PosterInfo.jsx';
+import CommentsSection from '../components/CommentsSection.jsx';
 import {
     Home, MapPin, Calendar, Users, Phone, Mail,
     Wifi, Zap, Droplet, Car, Shield, Sofa, Wind, CheckCircle,
@@ -135,7 +136,7 @@ const HousingDetails = () => {
                                 {/* Price & Location */}
                                 <div className="flex flex-wrap items-center gap-4 mb-6">
                                     <div>
-                                        <span className="text-3xl font-bold text-indigo-600">৳{post.rent}</span>
+                                        <span className="text-3xl font-bold text-indigo-600">Tk {post.rent}</span>
                                         <span className="text-gray-600 ml-2">/month</span>
                                         {post.negotiable && (
                                             <span className="ml-2 text-sm text-green-600 font-medium">Negotiable</span>
@@ -260,6 +261,8 @@ const HousingDetails = () => {
                             </div>
                         )}
 
+                        {/* Comments Section */}
+                        <CommentsSection postType="housing" postId={post._id} />
                     </div>
 
                     {/* Sidebar */}

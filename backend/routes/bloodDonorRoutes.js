@@ -8,6 +8,7 @@ import {
   updateDonation,
   createBloodRequest,
   getBloodRequests,
+  getBloodRequestById,
   respondToRequest,
   updateRequestStatus,
   deleteDonor,
@@ -27,6 +28,7 @@ router.delete("/donor", protect, deleteDonor);
 // Request routes
 router.post("/requests", protect, createBloodRequest);
 router.get("/requests", getBloodRequests);
+router.get("/requests/:id", getBloodRequestById);
 router.post("/requests/:id/respond", protect, respondToRequest);
 router.patch("/requests/:id/status", protect, updateRequestStatus);
 router.delete("/requests/:id", protect, deleteBloodRequest);

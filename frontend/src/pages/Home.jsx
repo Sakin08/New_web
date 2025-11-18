@@ -65,7 +65,7 @@ const Home = () => {
         { icon: MessageCircle, title: 'Chat', desc: 'Instant messaging with friends & groups', link: '/messages', color: 'from-purple-500 to-pink-500', bg: 'bg-purple-50', allowedRoles: ['student', 'teacher', 'admin'] },
         { icon: Calendar, title: 'Events', desc: 'Discover & join campus events', link: '/events', color: 'from-green-500 to-emerald-500', bg: 'bg-green-50', allowedRoles: ['student', 'teacher', 'admin'] },
         { icon: ShoppingBag, title: 'Marketplace', desc: 'Buy/sell books, gadgets, room rentals', link: '/buysell', color: 'from-orange-500 to-red-500', bg: 'bg-orange-50', allowedRoles: ['student', 'teacher', 'admin'] },
-        { icon: GraduationCap, title: 'Academics', desc: 'Study groups, job board, lost & found', link: '/study-groups', color: 'from-indigo-500 to-purple-500', bg: 'bg-indigo-50', allowedRoles: ['student', 'teacher', 'admin'] },
+        { icon: MapPin, title: 'Lost & Found', desc: 'Report lost items or find what you\'ve lost', link: '/lost-found', color: 'from-indigo-500 to-purple-500', bg: 'bg-indigo-50', allowedRoles: ['student', 'teacher', 'admin'] },
         { icon: Droplet, title: 'Blood Donation', desc: 'Find donors or respond to urgent requests', link: '/blood-donation', color: 'from-red-500 to-rose-500', bg: 'bg-red-50', allowedRoles: ['student', 'teacher', 'admin', 'other'] },
         { icon: ShoppingBag, title: 'Campus Eats', desc: 'Order food from campus restaurants', link: '/restaurants', color: 'from-yellow-500 to-orange-500', bg: 'bg-yellow-50', allowedRoles: ['student', 'teacher', 'admin', 'other'] }
     ];
@@ -75,12 +75,12 @@ const Home = () => {
         : allFeatures.filter(f => !f.allowedRoles || f.allowedRoles.includes(user?.role || 'student'));
 
     const allCategories = [
-        { name: 'Clubs', icon: '🎭', link: '/feed?tag=clubs', allowedRoles: ['student', 'teacher', 'admin'] },
-        { name: 'Programming', icon: '💻', link: '/feed?tag=programming', allowedRoles: ['student', 'teacher', 'admin'] },
+        { name: 'Events', icon: '�', link: '/events', allowedRoles: ['student', 'teacher', 'admin'] },
+        { name: 'Blood Donation', icon: '🩸', link: '/blood-donation', allowedRoles: ['student', 'teacher', 'admin', 'other'] },
         { name: 'Jobs', icon: '💼', link: '/jobs', allowedRoles: ['student', 'teacher', 'admin'] },
         { name: 'Housing', icon: '🏠', link: '/housing', allowedRoles: ['student', 'teacher', 'admin'] },
         { name: 'Food', icon: '🍔', link: '/restaurants', allowedRoles: ['student', 'teacher', 'admin', 'other'] },
-        { name: 'Books', icon: '📚', link: '/buysell?category=books', allowedRoles: ['student', 'teacher', 'admin'] },
+        { name: 'Marketplace', icon: '🛒', link: '/buysell', allowedRoles: ['student', 'teacher', 'admin'] },
         { name: 'Lost & Found', icon: '🔍', link: '/lost-found', allowedRoles: ['student', 'teacher', 'admin'] }
     ];
 
@@ -293,7 +293,7 @@ const Home = () => {
                         </div>
                         <div>
                             <div className="text-4xl font-extrabold text-green-600 mb-2">{stats.activeGroups}+</div>
-                            <div className="text-gray-600 font-medium">Active Study Groups</div>
+                            <div className="text-gray-600 font-medium">Items Found</div>
                         </div>
                     </div>
                 </div>

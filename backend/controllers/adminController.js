@@ -796,6 +796,13 @@ export const sendBulkNotificationAdmin = async (req, res) => {
   try {
     const { title, message, type, targetRole } = req.body;
 
+    // Validate required fields
+    if (!title || !message) {
+      return res
+        .status(400)
+        .json({ message: "Title and message are required" });
+    }
+
     let users;
     if (targetRole === "all") {
       users = await User.find({ isApproved: true });
@@ -803,20 +810,80 @@ export const sendBulkNotificationAdmin = async (req, res) => {
       users = await User.find({ role: targetRole, isApproved: true });
     }
 
+    if (users.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found for the selected role" });
+    }
+
     const notifications = users.map((user) => ({
-      user: user._id,
+      recipient: user._id,
       title,
       message,
-      type: type || "info",
+      type: type || "admin_info",
     }));
 
-    await Notification.insertMany(notifications);
+    const createdNotifications = await Notification.insertMany(notifications);
+
+    // Emit socket events to notify users in real-time
+    if (req.app.get("io")) {
+      const io = req.app.get("io");
+      createdNotifications.forEach((notification) => {
+        io.to(`user_${notification.recipient}`).emit(
+          "notification",
+          notification
+        );
+      });
+    }
 
     res.json({
       message: `Notification sent to ${users.length} users`,
       count: users.length,
     });
   } catch (error) {
+    console.error("Send bulk notification error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const sendNotificationToUserAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { title, message, type } = req.body;
+
+    // Validate required fields
+    if (!title || !message) {
+      return res
+        .status(400)
+        .json({ message: "Title and message are required" });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Create notification
+    const notification = await Notification.create({
+      recipient: userId,
+      title,
+      message,
+      type: type || "admin_info",
+    });
+
+    // Emit socket event to notify user in real-time
+    if (req.app.get("io")) {
+      const io = req.app.get("io");
+      io.to(`user_${userId}`).emit("notification", notification);
+    }
+
+    res.json({
+      message: "Notification sent successfully",
+      notification,
+    });
+  } catch (error) {
+    console.error("Send notification to user error:", error);
     res.status(500).json({ message: error.message });
   }
 };

@@ -18,12 +18,15 @@ const commentSchema = new mongoose.Schema(
         "job",
         "food",
         "lostfound",
+        "bloodrequest",
       ],
       required: true,
     },
     postId: { type: mongoose.Schema.Types.ObjectId, required: true },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     parentComment: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" }, // For replies
+    mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Users mentioned in comment
+    replyTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // User being replied to
   },
   { timestamps: true }
 );

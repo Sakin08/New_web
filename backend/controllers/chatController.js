@@ -167,14 +167,6 @@ export const deleteMessageForEveryone = async (req, res) => {
       });
     }
 
-    // Check if message is within 1 hour (optional time limit)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    if (message.createdAt < oneHourAgo) {
-      return res.status(403).json({
-        message: "Messages can only be deleted for everyone within 1 hour",
-      });
-    }
-
     message.deletedForEveryone = true;
     message.message = "This message was deleted";
     message.attachments = [];

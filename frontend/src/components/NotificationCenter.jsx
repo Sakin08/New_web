@@ -99,6 +99,32 @@ const NotificationCenter = () => {
         }
     };
 
+    const handleDeleteNotification = async (e, id) => {
+        e.stopPropagation();
+        try {
+            await notificationsApi.deleteNotification(id);
+            setNotifications(prev => prev.filter(n => n._id !== id));
+            const deletedNotif = notifications.find(n => n._id === id);
+            if (deletedNotif && !deletedNotif.read) {
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            }
+        } catch (err) {
+            console.error('Failed to delete notification:', err);
+        }
+    };
+
+    const handleDeleteAll = async () => {
+        if (!confirm('Delete all notifications? This action cannot be undone.')) return;
+        try {
+            await notificationsApi.deleteAll();
+            setNotifications([]);
+            setUnreadCount(0);
+        } catch (err) {
+            console.error('Failed to delete all notifications:', err);
+            alert('Failed to delete notifications');
+        }
+    };
+
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'event_created':
@@ -135,9 +161,30 @@ const NotificationCenter = () => {
             case 'blood_request':
             case 'blood_response':
                 return '🩸';
+            case 'admin_announcement':
+                return '📢';
+            case 'admin_warning':
+                return '⚠️';
+            case 'admin_info':
+                return 'ℹ️';
+            case 'system_alert':
+                return '🔔';
             default:
                 return '🔔';
         }
+    };
+
+    const getNotificationColor = (type) => {
+        if (type.startsWith('admin_warning') || type === 'system_alert') {
+            return 'bg-red-50 border-l-4 border-red-500';
+        }
+        if (type.startsWith('admin_announcement')) {
+            return 'bg-purple-50 border-l-4 border-purple-500';
+        }
+        if (type.startsWith('admin_')) {
+            return 'bg-blue-50 border-l-4 border-blue-500';
+        }
+        return '';
     };
 
     const formatTime = (date) => {
@@ -174,16 +221,44 @@ const NotificationCenter = () => {
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
                     {/* Header */}
-                    <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                        {unreadCount > 0 && (
+                    <div className="p-4 border-b border-gray-200">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                            {unreadCount > 0 && (
+                                <span className="px-2 py-1 text-xs font-semibold text-white bg-indigo-600 rounded-full">
+                                    {unreadCount} new
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                            {notifications.length > 0 && (
+                                <div className="flex gap-2">
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={handleMarkAllAsRead}
+                                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleDeleteAll}
+                                        className="text-xs text-red-600 hover:text-red-700 font-medium"
+                                    >
+                                        Delete all
+                                    </button>
+                                </div>
+                            )}
                             <button
-                                onClick={handleMarkAllAsRead}
-                                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                onClick={() => {
+                                    navigate('/notifications');
+                                    setIsOpen(false);
+                                }}
+                                className="text-xs text-gray-600 hover:text-gray-900 font-medium"
                             >
-                                Mark all read
+                                View all →
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     {/* Notifications List */}
@@ -204,33 +279,45 @@ const NotificationCenter = () => {
                                 <div
                                     key={notification._id || `notification-${index}`}
                                     onClick={() => handleNotificationClick(notification)}
-                                    className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition ${!notification.read ? 'bg-indigo-50' : ''
-                                        }`}
+                                    className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition group ${!notification.read ? 'bg-indigo-50' : ''
+                                        } ${getNotificationColor(notification.type)}`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        {/* User Profile Picture */}
+                                        {/* User Profile Picture or Icon */}
                                         {notification.sender?.profilePicture ? (
                                             <img
                                                 src={notification.sender.profilePicture}
                                                 alt={notification.sender.name}
-                                                className="w-10 h-10 rounded-full object-cover"
+                                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                             />
                                         ) : notification.sender ? (
-                                            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
+                                            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
                                                 {notification.sender.name?.charAt(0).toUpperCase()}
                                             </div>
                                         ) : (
-                                            <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                                            <span className="text-2xl flex-shrink-0">{getNotificationIcon(notification.type)}</span>
                                         )}
 
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-                                            <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.message}</p>
                                             <p className="text-xs text-gray-400 mt-1">{formatTime(notification.createdAt)}</p>
                                         </div>
-                                        {!notification.read && (
-                                            <div className="w-2 h-2 bg-indigo-600 rounded-full mt-2"></div>
-                                        )}
+
+                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                            {!notification.read && (
+                                                <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                                            )}
+                                            <button
+                                                onClick={(e) => handleDeleteNotification(e, notification._id)}
+                                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition"
+                                                title="Delete notification"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))

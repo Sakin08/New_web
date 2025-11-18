@@ -57,6 +57,7 @@ import {
   getAllNotificationsAdmin,
   deleteNotificationAdmin,
   sendBulkNotificationAdmin,
+  sendNotificationToUserAdmin,
   // Messages
   getAllMessagesAdmin,
   deleteMessageAdmin,
@@ -169,6 +170,7 @@ router.delete("/comments/:commentId", deleteCommentAdmin);
 router.get("/notifications", getAllNotificationsAdmin);
 router.delete("/notifications/:notificationId", deleteNotificationAdmin);
 router.post("/notifications/bulk", sendBulkNotificationAdmin);
+router.post("/notifications/user/:userId", sendNotificationToUserAdmin);
 
 // Messages management
 router.get("/messages", getAllMessagesAdmin);

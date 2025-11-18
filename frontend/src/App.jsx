@@ -48,7 +48,9 @@ import CreateLostFound from './pages/CreateLostFound.jsx';
 import LostFoundDetails from './pages/LostFoundDetails.jsx';
 import BloodDonation from './pages/BloodDonation.jsx';
 import RegisterDonor from './pages/RegisterDonor.jsx';
+import Notifications from './pages/Notifications.jsx';
 import CreateBloodRequest from './pages/CreateBloodRequest.jsx';
+import BloodRequestDetails from './pages/BloodRequestDetails.jsx';
 import EditDonorProfile from './pages/EditDonorProfile.jsx';
 import Newsfeed from './pages/Newsfeed.jsx';
 import SavedPosts from './pages/SavedPosts.jsx';
@@ -85,6 +87,7 @@ function AppContent() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/chat/:userId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/saved-posts" element={<ProtectedRoute><SavedPosts /></ProtectedRoute>} />
         <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
@@ -116,6 +119,7 @@ function AppContent() {
         <Route path="/blood-donation" element={<BloodDonation />} />
         <Route path="/blood-donation/register" element={<ProtectedRoute><RegisterDonor /></ProtectedRoute>} />
         <Route path="/blood-donation/request" element={<ProtectedRoute><CreateBloodRequest /></ProtectedRoute>} />
+        <Route path="/blood-donation/request/:id" element={<BloodRequestDetails />} />
         <Route path="/blood-donation/edit" element={<ProtectedRoute><EditDonorProfile /></ProtectedRoute>} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

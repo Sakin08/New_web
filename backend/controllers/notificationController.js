@@ -61,8 +61,33 @@ export const markAllAsRead = async (req, res) => {
 // Delete notification
 export const deleteNotification = async (req, res) => {
   try {
-    await Notification.findByIdAndDelete(req.params.id);
+    const notification = await Notification.findById(req.params.id);
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    // Ensure user can only delete their own notifications
+    if (notification.recipient.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this notification" });
+    }
+
+    await notification.deleteOne();
     res.json({ message: "Notification deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete all notifications for current user
+export const deleteAllNotifications = async (req, res) => {
+  try {
+    const result = await Notification.deleteMany({ recipient: req.user._id });
+    res.json({
+      message: "All notifications deleted",
+      deletedCount: result.deletedCount,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

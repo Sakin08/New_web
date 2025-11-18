@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { canDelete } from '../utils/permissions';
 import UserAvatar from './UserAvatar';
@@ -7,6 +7,7 @@ import { Locate, Phone, Hospital, Calendar, AlertTriangle, CheckCircle, XCircle,
 
 const RequestCard = ({ request, onUpdate }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const isUrgent = request.urgency === 'urgent';
     const isOwner = user && request.requester && user._id === request.requester._id;
     const showDelete = canDelete(user, request.requester);
@@ -45,12 +46,23 @@ const RequestCard = ({ request, onUpdate }) => {
     const primaryClass = isUrgent ? 'border-red-500' : 'border-blue-500';
     const urgencyBarClass = isUrgent ? 'bg-gradient-to-r from-red-600 to-red-700 animate-pulse shadow-red-500/50' : 'bg-gradient-to-r from-blue-600 to-blue-700 shadow-blue-500/50';
 
+    const handleCardClick = (e) => {
+        // Don't navigate if clicking on buttons or links
+        if (e.target.closest('button') || e.target.closest('a')) {
+            return;
+        }
+        navigate(`/blood-donation/request/${request._id}`);
+    };
+
     return (
-        <div className={`
-            bg-white rounded-2xl shadow-xl 
-            hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 
-            overflow-hidden border-t-4 border-l-2 ${primaryClass} flex flex-col
-        `}>
+        <div
+            onClick={handleCardClick}
+            className={`
+                bg-white rounded-2xl shadow-xl 
+                hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 
+                overflow-hidden border-t-4 border-l-2 ${primaryClass} flex flex-col cursor-pointer
+            `}
+        >
             {/* Urgency Bar - Used as a clean accent top border */}
             <div className={`h-1.5 ${urgencyBarClass}`}></div>
 
@@ -180,13 +192,28 @@ const RequestCard = ({ request, onUpdate }) => {
                         )}
                     </div>
                 ) : user ? (
+                    <div className="flex gap-2">
+                        <Link
+                            to={`/blood-donation/request/${request._id}`}
+                            className="flex-1 text-center flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-lg text-sm"
+                        >
+                            View Details
+                        </Link>
+                        <Link
+                            to={`/chat/${request.requester._id}`}
+                            className="flex-1 text-center flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold transition shadow-lg text-sm"
+                        >
+                            <MessageCircle size={18} /> Help
+                        </Link>
+                    </div>
+                ) : (
                     <Link
-                        to={`/chat/${request.requester._id}`}
-                        className="block w-full text-center flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold transition shadow-lg text-base"
+                        to={`/blood-donation/request/${request._id}`}
+                        className="block w-full text-center flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-lg text-base"
                     >
-                        <MessageCircle size={20} /> Contact Requester to Help
+                        View Details
                     </Link>
-                ) : null}
+                )}
             </div>
         </div>
     );

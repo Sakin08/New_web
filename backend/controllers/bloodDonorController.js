@@ -202,6 +202,23 @@ export const getBloodRequests = async (req, res) => {
   }
 };
 
+// Get single blood request by ID
+export const getBloodRequestById = async (req, res) => {
+  try {
+    const request = await BloodRequest.findById(req.params.id)
+      .populate("requester", "name email profilePicture department batch phone")
+      .populate("responses.donor", "name profilePicture email phone");
+
+    if (!request) {
+      return res.status(404).json({ message: "Blood request not found" });
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Respond to blood request
 export const respondToRequest = async (req, res) => {
   try {

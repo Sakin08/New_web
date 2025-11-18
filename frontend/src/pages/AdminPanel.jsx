@@ -27,7 +27,7 @@ const AdminPanel = () => {
     const [notificationForm, setNotificationForm] = useState({
         title: '',
         message: '',
-        type: 'info',
+        type: 'admin_info',
         targetRole: 'all'
     });
     const [editingRoleUserId, setEditingRoleUserId] = useState(null);
@@ -123,7 +123,7 @@ const AdminPanel = () => {
         try {
             const res = await api.post('/admin/notifications/bulk', notificationForm);
             alert(res.data.message);
-            setNotificationForm({ title: '', message: '', type: 'info', targetRole: 'all' });
+            setNotificationForm({ title: '', message: '', type: 'admin_info', targetRole: 'all' });
         } catch (error) {
             alert('Failed to send notification');
         }
@@ -801,10 +801,10 @@ const AdminPanel = () => {
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                                             required
                                         >
-                                            <option value="info">Info</option>
-                                            <option value="warning">Warning</option>
-                                            <option value="success">Success</option>
-                                            <option value="error">Error</option>
+                                            <option value="admin_info">Info</option>
+                                            <option value="admin_warning">Warning</option>
+                                            <option value="admin_announcement">Announcement</option>
+                                            <option value="system_alert">System Alert</option>
                                         </select>
                                     </div>
                                     <div>
@@ -835,7 +835,7 @@ const AdminPanel = () => {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setNotificationForm({ title: '', message: '', type: 'info', targetRole: 'all' })}
+                                            onClick={() => setNotificationForm({ title: '', message: '', type: 'admin_info', targetRole: 'all' })}
                                             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold"
                                         >
                                             Clear Form

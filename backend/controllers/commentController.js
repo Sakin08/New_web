@@ -1,9 +1,12 @@
 import Comment from "../models/Comment.js";
+import Notification from "../models/Notification.js";
+import User from "../models/User.js";
 import { notifyContentOwner } from "./notificationController.js";
 
 export const createComment = async (req, res) => {
   try {
-    const { content, postType, postId, parentComment } = req.body;
+    const { content, postType, postId, parentComment, replyTo, mentions } =
+      req.body;
 
     const comment = await Comment.create({
       content,
@@ -11,24 +14,92 @@ export const createComment = async (req, res) => {
       postType,
       postId,
       parentComment,
+      replyTo,
+      mentions: mentions || [],
     });
 
     await comment.populate("author", "name profilePicture");
+    await comment.populate("replyTo", "name");
 
-    // Get post owner and notify them
-    try {
-      const postOwner = await getPostOwner(postType, postId);
-      if (postOwner && postOwner.toString() !== req.user._id.toString()) {
-        await notifyContentOwner(
-          postOwner,
-          req.user._id,
-          "comment",
-          `your ${postType}`,
-          `/${postType}/${postId}`
-        );
+    // Get post owner and notify them (if not replying to someone)
+    if (!replyTo) {
+      try {
+        const postOwner = await getPostOwner(postType, postId);
+        if (postOwner && postOwner.toString() !== req.user._id.toString()) {
+          await notifyContentOwner(
+            postOwner,
+            req.user._id,
+            "comment",
+            `your ${postType}`,
+            `/${postType}/${postId}`
+          );
+        }
+      } catch (notifError) {
+        console.error("Failed to send comment notification:", notifError);
       }
-    } catch (notifError) {
-      console.error("Failed to send comment notification:", notifError);
+    }
+
+    // Notify user being replied to
+    if (replyTo && replyTo.toString() !== req.user._id.toString()) {
+      try {
+        const repliedUser = await User.findById(replyTo);
+        if (repliedUser) {
+          await Notification.create({
+            recipient: replyTo,
+            sender: req.user._id,
+            type: "comment_added",
+            title: `${req.user.name} replied to your comment`,
+            message: content.substring(0, 100),
+            link: `/${postType}/${postId}`,
+          });
+
+          // Emit socket event
+          if (req.app.get("io")) {
+            const io = req.app.get("io");
+            io.to(`user_${replyTo}`).emit("notification", {
+              type: "comment_reply",
+              message: `${req.user.name} replied to your comment`,
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error("Failed to send reply notification:", notifError);
+      }
+    }
+
+    // Notify mentioned users
+    if (mentions && mentions.length > 0) {
+      try {
+        const mentionNotifications = mentions
+          .filter((userId) => userId.toString() !== req.user._id.toString())
+          .map((userId) => ({
+            recipient: userId,
+            sender: req.user._id,
+            type: "comment_added",
+            title: `${req.user.name} mentioned you in a comment`,
+            message: content.substring(0, 100),
+            link: `/${postType}/${postId}`,
+          }));
+
+        if (mentionNotifications.length > 0) {
+          await Notification.insertMany(mentionNotifications);
+
+          // Emit socket events
+          if (req.app.get("io")) {
+            const io = req.app.get("io");
+            mentions.forEach((userId) => {
+              if (userId.toString() !== req.user._id.toString()) {
+                io.to(`user_${userId}`).emit("notification", {
+                  type: "mention",
+                  message: `${req.user.name} mentioned you in a comment`,
+                });
+              }
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error("Failed to send mention notifications:", notifError);
+      }
     }
 
     res.status(201).json(comment);
@@ -83,19 +154,36 @@ export const getComments = async (req, res) => {
   try {
     const { postType, postId } = req.query;
 
-    const comments = await Comment.find({
+    // Get all comments for this post
+    const allComments = await Comment.find({
       postType,
       postId,
-      parentComment: null,
     })
       .populate("author", "name profilePicture")
-      .populate({
-        path: "parentComment",
-        populate: { path: "author", select: "name profilePicture" },
-      })
+      .populate("replyTo", "name")
+      .populate("mentions", "name")
       .sort({ createdAt: -1 });
 
-    res.json(comments);
+    // Organize comments with their replies
+    const topLevelComments = allComments.filter((c) => !c.parentComment);
+    const commentMap = {};
+
+    allComments.forEach((comment) => {
+      commentMap[comment._id] = { ...comment.toObject(), replies: [] };
+    });
+
+    allComments.forEach((comment) => {
+      if (comment.parentComment) {
+        const parent = commentMap[comment.parentComment];
+        if (parent) {
+          parent.replies.push(commentMap[comment._id]);
+        }
+      }
+    });
+
+    const result = topLevelComments.map((c) => commentMap[c._id]);
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
